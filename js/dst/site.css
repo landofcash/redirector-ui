@@ -1,0 +1,77 @@
+html {
+  min-height: 100%;
+  position: relative;
+}
+body {
+  height: 100%;
+  margin-bottom: 110px;
+}
+#footer {
+  width: 100%;
+  font-size: 10px;
+  color: #cccccc;
+  text-align: center;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  text-shadow: 1px 1px 1px #000;
+  background-color: #2D2926;
+  position: absolute;
+  bottom: 0;
+  height: 110px;
+}
+td.json-key {
+  color: black;
+  width: 20%;
+}
+td.json-item-key {
+  color: black;
+  background-color: #cccccc;
+}
+td.json-array-key {
+  color: black;
+  background-color: #cccccc;
+}
+td.json-value {
+  color: navy;
+}
+.json-key {
+  color: brown;
+  font-weight: bold;
+}
+.json-value {
+  color: navy;
+}
+.json-string {
+  color: olive;
+}
+i.branch-unknown {
+  color: grey;
+}
+i.branch-dev {
+  color: green;
+}
+i.branch-prod {
+  color: #53cdeb;
+}
+i.branch-master {
+  color: grey;
+}
+div.branch-unknown {
+  border-bottom: 3px solid grey;
+}
+div.branch-dev {
+  border-bottom: 3px solid green;
+}
+div.branch-prod {
+  border-bottom: 3px solid #53cdeb;
+}
+div.branch-master {
+  border-bottom: 3px solid grey;
+}
+.noItemsRow {
+  text-align: center;
+  font-weight: bold;
+}
+.noLineBreak {
+  white-space: nowrap;
+}

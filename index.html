@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex">
+    <meta name="viewport" content="width=device-width">
+    <title>Redirector App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/5.1.1/bootstrap-social.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/1.1.1/typeahead.bundle.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js-bootstrap-css/1.2.1/typeaheadjs.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.86/jsrender.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsviews/0.9.86/jsviews.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vee-validate/2.2.11/vee-validate.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=places&key=AIzaSyDx8qz6EM2SkT-PBBLraJb6_H7g1EiGvII&language=en&x.js"></script>
+
+    <script src="/js/dst/index.js"></script>
+    <link href="/js/dst/FileUploadButton.css" rel="stylesheet">
+    <link href="/js/dst/FormXS.css" rel="stylesheet">
+    <link href="/js/dst/modalHeaderColor.css" rel="stylesheet">
+    <link href="/js/dst/site.css" rel="stylesheet">
+</head>
+<body>
+<div id="app" class="container">
+    <h1>Redirector App Rules</h1>
+    <div>
+        <button @click='addOpen' class="btn btn-default">Add New Rule</button>
+        <button @click='save' class="btn btn-default">Save Rules</button>
+        <button @click='loadOpen' class="btn btn-default">Load Rules</button>
+    </div>
+    <table class="table" v-if='items.length>0'>
+        <tr>
+            <th>REGEX Pattern</th>
+            <th>Url Where To Redirect</th>
+            <th>Actions</th>
+        </tr>
+        <tr v-for='item in items'>
+            <td>{{item.template}}</td>
+            <td>{{item.redirectUrl}}</td>
+            <th><button @click='editOpen(item)' class="btn btn-xs btn-default">Edit</button>
+                <button @click='deleteItem(item)' class="btn btn-xs btn-danger">Delete</button>
+            </th>
+        </tr>
+    </table>
+    <div v-else>
+        No rules. Load rules or start adding one by one. Use buttons on top.
+    </div>
+
+    <bootstrap-modal ref="saveModal" :need-header="true" :need-footer="true" :size="'large'">
+        <div slot="body"><pre>{{saveData}}</pre></div>
+    </bootstrap-modal>
+
+    <bootstrap-modal ref="editModal" :need-header="true" :need-footer="true" :size="'large'">
+        <div slot="title">Edit Item</div>
+        <div slot="body" class="form-horizontal">
+            <div class="form-group">
+                <label for="inputRegex" class="col-xs-3 control-label">Input Regex</label>
+                <div class="col-xs-9">
+                    <input type="text" v-model="editItem.template" class="form-control" id="inputRegex" placeholder="Regex Template">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="redirect" class="col-xs-3 control-label">Redirect Url</label>
+                <div class="col-xs-9">
+                    <input type="text" v-model="editItem.redirectUrl" class="form-control" id="redirect" placeholder="Redirect Url">
+                </div>
+            </div>
+        </div>
+        <div slot="footer">
+            <button type="button" class="btn btn-default" @click="$refs.editModal.close()">Close</button>
+            <button type="button" @click="editSave" class="btn btn-primary">Save changes</button>
+        </div>
+    </bootstrap-modal>
+
+    <bootstrap-modal ref="loadModal" :need-header="true" :need-footer="true" :size="'large'">
+        <div slot="title">Load</div>
+        <div slot="body" class="form">
+            <div class="form-group">
+                <label for="load" class="control-label">Load Rules Json</label>
+                <div>
+                    <textarea v-model="loadData" class="form-control" id="load" placeholder="Rules Json" style="min-height:350px;"></textarea>
+                </div>
+            </div>
+        </div>
+        <div slot="footer">
+            <button type="button" class="btn btn-default" @click="$refs.loadModal.close()">Close</button>
+            <button type="button" @click="load" class="btn btn-primary">Save changes</button>
+        </div>
+    </bootstrap-modal>
+</div>
+
+    <script>
+        let vm = new Vue({
+            el: "#app",
+            components: IMSVueComponents,
+            data: {
+                items: [],
+                editItem:{"template":"","redirectUrl":"", isNew:true},
+                loadData:'',
+                saveData:''
+            },
+            methods: {
+                deleteItem: function(item){
+                    var me =this;
+                    me.items = me.items.filter(function(value, index, arr){ return value.template !== item.template;});
+                },
+                save: function(item){
+                    var me =this;
+                    me.saveData = JSON.stringify({items:me.items},null, '\t');
+                    console.log(me.saveData);
+                    vm.$refs.saveModal.open();
+                },
+                loadOpen: function(item){
+                    vm.$refs.loadModal.open();
+                },
+                load: function(item){
+                    var me =this;
+                    var loadedItem = JSON.parse(me.loadData);
+                    me.items=loadedItem.items;
+                    me.loadData = '';
+                    vm.$refs.loadModal.close();
+                },
+                addOpen: function(){
+                    var me = this;
+                    me.editItem = {"template":"","redirectUrl":"", isNew:true};
+                    vm.$refs.editModal.open();
+                },
+
+                editOpen: function(item){
+                    var me = this;
+                    me.editItem = item;
+                    me.editItem.isNew=false;
+                    vm.$refs.editModal.open();
+                },
+
+                editSave: function(){
+                    var me = this;
+                    if(me.editItem.template && me.editItem.redirectUrl){
+                        if(me.editItem.isNew){
+                            me.items.push(this.editItem);
+                        }
+                    }
+                    me.editItem = {"template":"","redirectUrl":""};
+                    vm.$refs.editModal.close();
+                }
+            }
+        })
+    </script>
+</body>
+</html>

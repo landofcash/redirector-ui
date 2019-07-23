@@ -125,8 +125,12 @@
                 load: function(item){
                     var me =this;
                     var loadedItem = JSON.parse(me.loadData);
-                    me.items=loadedItem.items;
-                    me.loadData = '';
+                    if(loadedItem.items && loadedItem.items.length) {
+                        me.items = loadedItem.items;
+                        me.loadData = '';
+                    }else{
+                        alert("Error. No items array in the input data.")
+                    }
                     vm.$refs.loadModal.close();
                 },
                 addOpen: function(){
